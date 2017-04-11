@@ -1,0 +1,19 @@
+﻿<Window x:Class="MetroPass.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MetroMap" Height="700" Width="700" MouseLeftButtonUp="Window_MouseLeftButtonUp_1" MouseRightButtonUp="Window_MouseRightButtonUp_1"
+        >
+    <Window.Background>
+        <ImageBrush ImageSource="kyiv_metro.png" Stretch="UniformToFill"/>
+    </Window.Background>
+    <Grid>
+        <TextBox Name="StationFrom" HorizontalAlignment="Left" Height="23" TextWrapping="Wrap" Text="Left Mouse on map" VerticalAlignment="Top" Width="201" Margin="10,8,0,0" Grid.Row="1"/>
+        <TextBox Name="StationWhere" HorizontalAlignment="Left" Height="23" Margin="10,36,0,0" TextWrapping="Wrap" Text="Right Mouse on map" VerticalAlignment="Top" Width="201" Grid.Row="1"/>
+        <Label Name="label1" Content="Where" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="222,34,0,0" Grid.Row="1"/>
+        <Label Name="label2" Content="From" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="222,8,0,0" Grid.Row="1" />
+    </Grid>
+    
+    
+    
+    
+</Window>

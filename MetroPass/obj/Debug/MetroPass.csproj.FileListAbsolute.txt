@@ -1,0 +1,13 @@
+E:\SMRTNKY\MetroPass\MetroPass\bin\Debug\MetroPass.exe.config
+E:\SMRTNKY\MetroPass\MetroPass\bin\Debug\MetroPass.exe
+E:\SMRTNKY\MetroPass\MetroPass\bin\Debug\MetroPass.pdb
+E:\SMRTNKY\MetroPass\MetroPass\obj\Debug\MainWindow.baml
+E:\SMRTNKY\MetroPass\MetroPass\obj\Debug\MainWindow.g.cs
+E:\SMRTNKY\MetroPass\MetroPass\obj\Debug\App.g.cs
+E:\SMRTNKY\MetroPass\MetroPass\obj\Debug\MetroPass_MarkupCompile.cache
+E:\SMRTNKY\MetroPass\MetroPass\obj\Debug\MetroPass.g.resources
+E:\SMRTNKY\MetroPass\MetroPass\obj\Debug\MetroPass.Properties.Resources.resources
+E:\SMRTNKY\MetroPass\MetroPass\obj\Debug\MetroPass.csproj.GenerateResource.Cache
+E:\SMRTNKY\MetroPass\MetroPass\obj\Debug\MetroPass.exe
+E:\SMRTNKY\MetroPass\MetroPass\obj\Debug\MetroPass.pdb
+E:\SMRTNKY\MetroPass\MetroPass\obj\Debug\MetroPass.csprojResolveAssemblyReference.cache
