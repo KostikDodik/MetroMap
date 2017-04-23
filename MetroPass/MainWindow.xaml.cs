@@ -24,12 +24,22 @@ namespace MetroPass
     {
         Dictionary<string, List<Station>> map = new Dictionary<string, List<Station>>();
         List<Station> passStations = new List<Station>();
+        ImageBrush ballBrush = new ImageBrush();
+        
         int r = 10; // radius of cursor's pickup
 
-        PathGeometry pathGeometry;
-        PathFigure pathFigure;
         PolyLineSegment bezie;
+
         Station start, finish;
+
+        public MainWindow()
+        {
+            InitializeComponent();
+            LoadBase();
+            ballBrush.ImageSource = new BitmapImage(new Uri(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName), "ball.png")));
+            ballBrush.Stretch = Stretch.UniformToFill;
+        }
+
         void LoadBase()
         {
             StreamReader reader = new StreamReader(File.OpenRead("Stations.txt"));
@@ -61,12 +71,6 @@ namespace MetroPass
             return station;
         }
 
-        public MainWindow()
-        {
-            InitializeComponent();
-            LoadBase();
-        }
-
         private void AddPoint(PolyLineSegment bezie, Point po)
         {
             Point p = po;
@@ -74,6 +78,7 @@ namespace MetroPass
             p.Y -= 20;
             bezie.Points.Add(p);
         }
+
         private void MoveByLine(List<Station> currentLine, int GoFrom, int GoTo, PolyLineSegment bezie)
         {
 
@@ -88,16 +93,9 @@ namespace MetroPass
 
         private void DrawPass()
         {
-
-            pathGeometry = new PathGeometry();
-            pathFigure = new PathFigure();
-            Point startingFrom = start.coord;
-            startingFrom.X -= 20;
-            startingFrom.Y -= 20;
-            pathFigure.StartPoint = startingFrom;
             bezie = new PolyLineSegment();
+            if (start == finish) return;
             List<Station> currentLine = map[start.Line];
-
 
             int GoFrom, GoTo;
             if (start.Line == finish.Line)
@@ -123,44 +121,45 @@ namespace MetroPass
                 GoTo = currentLine.IndexOf(finish);
                 MoveByLine(currentLine, GoFrom, GoTo, bezie);
             }
-
-
-            pathFigure.Segments.Add(bezie);
-            pathGeometry.Figures.Add(pathFigure);
         }
 
         private void DoAnimation()
         {
+            if (start == finish) return;
+            PathGeometry pathGeometry = new PathGeometry();
+            PathFigure pathFigure = new PathFigure();
+            Point startingFrom = start.coord;
+            startingFrom.X -= 20;
+            startingFrom.Y -= 20;
+            pathFigure.StartPoint = startingFrom;
+            pathFigure.Segments.Add(bezie);
+            pathGeometry.Figures.Add(pathFigure);
 
             NameScope.SetNameScope(this, new NameScope());
-
+            DoubleAnimationUsingPath transX = new DoubleAnimationUsingPath();
+            DoubleAnimationUsingPath transY = new DoubleAnimationUsingPath();
             Rectangle aRectangle = new Rectangle();
             aRectangle.Width = 40;
             aRectangle.Height = 40;
-            var br = new ImageBrush();
-            br.ImageSource = new BitmapImage(new Uri(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName), "ball.png")));
-            br.Stretch = Stretch.UniformToFill;
-            aRectangle.Fill = br;
+            aRectangle.Fill = ballBrush;
 
             TranslateTransform transform = new TranslateTransform();
-            this.RegisterName("AnimatedTranslateTransform", transform);
+            this.RegisterName("Transform", transform);
 
             aRectangle.RenderTransform = transform;
             mainPanel.Children.Add(aRectangle);
             this.Content = mainPanel;
 
-            DoubleAnimationUsingPath transX = new DoubleAnimationUsingPath();
             transX.PathGeometry = pathGeometry;
             transX.Duration = TimeSpan.FromSeconds(5);
             transX.Source = PathAnimationSource.X;
-            Storyboard.SetTargetName(transX, "AnimatedTranslateTransform");
+            Storyboard.SetTargetName(transX, "Transform");
             Storyboard.SetTargetProperty(transX, new PropertyPath(TranslateTransform.XProperty));
 
-            DoubleAnimationUsingPath transY = new DoubleAnimationUsingPath();
             transY.PathGeometry = pathGeometry;
             transY.Duration = TimeSpan.FromSeconds(5);
             transY.Source = PathAnimationSource.Y;
-            Storyboard.SetTargetName(transY, "AnimatedTranslateTransform");
+            Storyboard.SetTargetName(transY, "Transform");
             Storyboard.SetTargetProperty(transY, new PropertyPath(TranslateTransform.YProperty));
 
             Storyboard storyboard = new Storyboard();
@@ -176,11 +175,11 @@ namespace MetroPass
 
             storyboard.Completed += delegate(object sender, EventArgs e)
             {
+                pathGeometry.Clear();
                 mainPanel.Children.Remove(aRectangle);
             };
         }
-
-
+        
         private void Window_MouseLeftButtonUp_1(object sender, MouseButtonEventArgs e)
         {
             if ((bool)EditorsChB.IsChecked) return;
