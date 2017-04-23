@@ -7,11 +7,13 @@
         <ImageBrush ImageSource="kyiv_metro.png" Stretch="UniformToFill"/>
     </Window.Background>
     <Canvas Name="mainPanel" Margin="0,0,0,0">
-        <TextBox Name="StationFrom" HorizontalAlignment="Left" Height="23" TextWrapping="Wrap" Text="Left Mouse on map" VerticalAlignment="Top" Width="201" Margin="10,8,0,0" Grid.Row="1"/>
-        <TextBox Name="StationWhere" HorizontalAlignment="Left" Height="23" Margin="10,36,0,0" TextWrapping="Wrap" Text="Right Mouse on map" VerticalAlignment="Top" Width="201" Grid.Row="1"/>
-        <Label Name="label1" Content="Where" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="222,34,0,0" Grid.Row="1"/>
-        <Label Name="label2" Content="From" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="222,8,0,0" Grid.Row="1" />
-        <CheckBox Name="EditorsChB" Content="Editors mode" Canvas.Left="10" Canvas.Top="64"/>
+        <TextBox Name="StationFrom" HorizontalAlignment="Left" Height="23" TextWrapping="Wrap" Text="Left Mouse on map" VerticalAlignment="Top" Width="201" Margin="10,8,0,0" Grid.Row="1" GotFocus="StationFrom_GotFocus"/>
+        <TextBox Name="StationWhere" HorizontalAlignment="Left" Height="23" Margin="10,36,0,0" TextWrapping="Wrap" Text="Right Mouse on map" VerticalAlignment="Top" Width="201" Grid.Row="1" GotFocus="StationWhere_GotFocus"/>
+        <Label Name="label2" Content="Where" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="222,34,0,0" Grid.Row="1"/>
+        <Label Name="label1" Content="From" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="222,8,0,0" Grid.Row="1" />
+        <CheckBox Name="EditorsChB" Content="Editors mode" Canvas.Left="10" Canvas.Top="64" Unchecked="EditorsChB_Unchecked" Checked="EditorsChB_Checked"/>
+        <TextBox Name="IndexTB" Visibility="Hidden" Height="24" Canvas.Left="152" TextWrapping="Wrap" Text="TextBox" Canvas.Top="64" Width="59" GotFocus="IndexTB_GotFocus"/>
+        <Label Name="label3" Visibility="Hidden" Content="Leave empty if insert at end" HorizontalAlignment="Left" VerticalAlignment="Top" Canvas.Left="222" Canvas.Top="65"/>
     </Canvas>
     
     

@@ -25,7 +25,7 @@ namespace MetroPass
         Dictionary<string, List<Station>> map = new Dictionary<string, List<Station>>();
         List<Station> passStations = new List<Station>();
         ImageBrush ballBrush = new ImageBrush();
-        
+        bool EditorsMode = false;
         int r = 10; // radius of cursor's pickup
 
         PolyLineSegment bezie;
@@ -182,7 +182,7 @@ namespace MetroPass
         
         private void Window_MouseLeftButtonUp_1(object sender, MouseButtonEventArgs e)
         {
-            if ((bool)EditorsChB.IsChecked) return;
+            if (EditorsMode) return;
 
             Point p = Mouse.GetPosition(mainPanel);
             Station selected = FindStation(p);
@@ -200,7 +200,7 @@ namespace MetroPass
 
         private void Window_MouseRightButtonUp_1(object sender, MouseButtonEventArgs e)
         {
-            if ((bool)EditorsChB.IsChecked) return;
+            if (EditorsMode) return;
 
             Point p = Mouse.GetPosition(mainPanel);
             Station selected = FindStation(p);
@@ -235,7 +235,7 @@ namespace MetroPass
         {
 
             Point p = Mouse.GetPosition(mainPanel);
-            if ((bool)EditorsChB.IsChecked)
+            if (EditorsMode)
             {
                 Station station = new Station(StationWhere.Text, StationFrom.Text, p);
                 if (station.Line.Contains('_'))
@@ -244,10 +244,57 @@ namespace MetroPass
                 {
                     if (!map.ContainsKey(station.Line))
                         map.Add(station.Line, new List<Station>());
-                    map[station.Line].Add(station);
+                    if( IndexTB.Text=="" || IndexTB.Text=="Index" )
+                        map[station.Line].Add(station);
+                    else try
+                        {
+                            int index = Int32.Parse(IndexTB.Text);
+                            map[station.Line].Insert(index, station);
+                        }
+                        catch (Exception a)
+                        {
+                            MessageBox.Show("Cant add the station: " + a.Message);
+                        }
                 }
 
             }
+        }
+
+        private void EditorsChB_Unchecked(object sender, RoutedEventArgs e)
+        {
+            EditorsMode = false;
+            label1.Content = "From";
+            label2.Content = "Where";
+            StationFrom.Text = "Left Mouse on map";
+            StationWhere.Text = "Right Mouse on map";
+            label3.Visibility = Visibility.Hidden;
+            IndexTB.Visibility = Visibility.Hidden;
+        }
+
+        private void EditorsChB_Checked(object sender, RoutedEventArgs e)
+        {
+            EditorsMode = true;
+            label1.Content = "Name of station";
+            label2.Content = "Branch of station";
+            StationFrom.Text = "Type here";
+            StationWhere.Text = "Type here";
+            label3.Visibility = Visibility.Visible;
+            IndexTB.Visibility = Visibility.Visible;
+            IndexTB.Text = "Index";
+        }
+
+        private void StationFrom_GotFocus(object sender, RoutedEventArgs e)
+        {
+            StationFrom.Text = "";
+        }
+        private void StationWhere_GotFocus(object sender, RoutedEventArgs e)
+        {
+            StationWhere.Text = "";
+        }
+
+        private void IndexTB_GotFocus(object sender, RoutedEventArgs e)
+        {
+            IndexTB.Text = "";
         }
     }
 }
