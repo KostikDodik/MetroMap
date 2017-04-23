@@ -22,10 +22,8 @@ namespace MetroPass
     /// </summary>
     public partial class MainWindow : Window
     {
-        List<Station> RedLine =new List<Station>();
-        List<Station> BlueLine=new List<Station>();
-        List<Station> GreenLine=new List<Station>();
-        List<Station> stations = new List<Station>();
+        Dictionary<string, List<Station>> map = new Dictionary<string, List<Station>>();
+        List<Station> passStations = new List<Station>();
         int r = 10; // radius of cursor's pickup
 
         PathGeometry pathGeometry;
@@ -36,191 +34,86 @@ namespace MetroPass
         {
             StreamReader reader = new StreamReader(File.OpenRead("Stations.txt"));
             while (!reader.EndOfStream)
-                stations.Add(new Station(reader.ReadLine()));
+            {
+                Station station=new Station(reader.ReadLine());
+                if(station.Line.Contains('_'))
+                    passStations.Add(station);
+                else
+                {
+                    if (!map.ContainsKey(station.Line))
+                        map.Add(station.Line, new List<Station>());
+                    map[station.Line].Add(station);
+                }
+            }
             reader.Close();
-            RedLine = stations.FindAll(st => st.Line == "Red");
-            BlueLine = stations.FindAll(st => st.Line == "Blue");
-            GreenLine = stations.FindAll(st => st.Line == "Green");
         }
-        
+
+        Station FindStation(Point p)
+        {
+            int x =(int)p.X;
+            int y =(int)p.Y;
+            Station station = null;
+            foreach (List<Station> list in map.Values)
+            {
+                station = list.FirstOrDefault(st => (st.coord.X - x) * (st.coord.X - x) + (st.coord.Y - y) * (st.coord.Y - y) < r * r); //Coords of mouse are in r from any station
+                if (station != null) return station;
+            }
+            return station;
+        }
+
         public MainWindow()
         {
             InitializeComponent();
             LoadBase();
         }
-
-        private void Window_MouseLeftButtonUp_1(object sender, MouseButtonEventArgs e)
+        
+        private void MoveByLine(List<Station> currentLine, int GoFrom, int GoTo, PolyLineSegment bezie)
         {
-            int x = (int)Mouse.GetPosition(this).X;
-            int y = (int)Mouse.GetPosition(this).Y;
-            Station selected = stations.FirstOrDefault(st => (st.coord.X - x) * (st.coord.X - x) + (st.coord.Y - y) * (st.coord.Y - y) < r * r); //Coords of mouse are in r from any station
-            if (selected != null)
+            
+            int sign = Math.Sign(GoTo - GoFrom);
+            for (int i = GoFrom;
+                sign * i < sign * GoTo;
+                i += sign)
             {
-
-                StationFrom.Text = selected.Name;
-                start = selected;
-                if (finish != null)
-                    DrawPass();
-            }
-        }
-        private void Window_MouseRightButtonUp_1(object sender, MouseButtonEventArgs e)
-        {
-            int x = (int)Mouse.GetPosition(this).X;
-            int y = (int)Mouse.GetPosition(this).Y;
-            Station selected = stations.FirstOrDefault(st => (st.coord.X - x) * (st.coord.X - x) + (st.coord.Y - y) * (st.coord.Y - y) < r * r); //Coords of mouse are in r from any station
-            if (selected != null)
-            {
-                StationWhere.Text = selected.Name;
-                finish = selected;
-                if (start != null)
-                {
-                    DrawPass();
-                    DoAnimation();
-                }
+                bezie.Points.Add(currentLine[i].coord);
             }
         }
 
         private void DrawPass()
         {
-            int GoTo;
+
             pathGeometry = new PathGeometry();
-            pathFigure=new PathFigure();
+            pathFigure = new PathFigure();
             pathFigure.StartPoint = start.coord;
             bezie = new PolyLineSegment();
-            if (start.Line == "Red")
+            List<Station> currentLine = map[start.Line];
+            int GoFrom, GoTo;
+            if (start.Line == finish.Line)
             {
-                if (finish.Line == "Red")
-                {
-                    int sign = Math.Sign(RedLine.IndexOf(finish) - RedLine.IndexOf(start));
-                    for (int i = RedLine.IndexOf(start); sign * i < sign * RedLine.IndexOf(finish); i += sign)
-                        bezie.Points.Add(RedLine[i].coord);
-                    bezie.Points.Add(finish.coord);
-                }
-
-                else if (finish.Line == "Blue")
-                {
-                    GoTo = RedLine.FindIndex(st => st.Name == "Хрещатик");
-                    int sign = Math.Sign(GoTo - RedLine.IndexOf(start));
-                    for (int i = RedLine.IndexOf(start); sign * i < sign * GoTo; i += sign)
-                        bezie.Points.Add(RedLine[i].coord);
-
-                    GoTo = BlueLine.FindIndex(st => st.Name == "Майдан Незалежності");
-                    bezie.Points.Add(BlueLine[GoTo].coord);
-
-                    sign = Math.Sign(BlueLine.IndexOf(finish) - GoTo);
-                    for (int i = GoTo; sign * i < sign * BlueLine.IndexOf(finish); i += sign)
-                        bezie.Points.Add(BlueLine[i].coord);
-                    bezie.Points.Add(finish.coord);
-                }
-
-                else
-                {
-                    GoTo = RedLine.FindIndex(st => st.Name == "Театральна");
-                    int sign = Math.Sign(GoTo - RedLine.IndexOf(start));
-                    for (int i = RedLine.IndexOf(start); sign * i < sign * GoTo; i += sign)
-                        bezie.Points.Add(RedLine[i].coord);
-                    bezie.Points.Add(RedLine[GoTo].coord);
-
-                    GoTo = GreenLine.FindIndex(st => st.Name == "Золоті Ворота");
-                    bezie.Points.Add(GreenLine[GoTo].coord);
-                    
-                    sign = Math.Sign(GreenLine.IndexOf(finish) - GoTo);
-                    for (int i = GoTo; sign * i < sign * GreenLine.IndexOf(finish); i += sign)
-                        bezie.Points.Add(GreenLine[i].coord);
-                    bezie.Points.Add(finish.coord);
-                }
+                GoFrom = currentLine.IndexOf(start);
+                GoTo = currentLine.IndexOf(finish);
+                MoveByLine(currentLine, GoFrom, GoTo, bezie);
             }
-
-
-            else if (start.Line == "Blue")
-            {
-                if (finish.Line == "Blue")
-                {
-                    int sign = Math.Sign(BlueLine.IndexOf(finish) - BlueLine.IndexOf(start));
-                    for (int i = BlueLine.IndexOf(start); sign * i < sign * BlueLine.IndexOf(finish); i += sign)
-                        bezie.Points.Add(BlueLine[i].coord);
-                    bezie.Points.Add(finish.coord);
-                }
-
-                else if (finish.Line == "Red")
-                {
-                    GoTo = BlueLine.FindIndex(st => st.Name == "Майдан Незалежності");
-                    int sign = Math.Sign(GoTo - BlueLine.IndexOf(start));
-                    for (int i = BlueLine.IndexOf(start); sign * i < sign * GoTo; i += sign)
-                        bezie.Points.Add(BlueLine[i].coord);
-                    bezie.Points.Add(BlueLine[GoTo].coord);
-
-                    GoTo = RedLine.FindIndex(st => st.Name == "Хрещатик");
-
-                    sign = Math.Sign(RedLine.IndexOf(finish) - GoTo);
-                    for (int i = GoTo; sign * i < sign * RedLine.IndexOf(finish); i += sign)
-                        bezie.Points.Add(RedLine[i].coord);
-                    bezie.Points.Add(finish.coord);
-                }
-
-                else
-                {
-                    GoTo = BlueLine.FindIndex(st => st.Name == "Площа Льва Толстого");
-                    int sign = Math.Sign(GoTo - BlueLine.IndexOf(start));
-                    for (int i = BlueLine.IndexOf(start); sign * i < sign * GoTo; i += sign)
-                        bezie.Points.Add(BlueLine[i].coord);
-                    bezie.Points.Add(BlueLine[GoTo].coord);
-
-                    GoTo = GreenLine.FindIndex(st => st.Name == "Палац спорту");
-
-                    sign = Math.Sign(GreenLine.IndexOf(finish) - GoTo);
-                    for (int i = GoTo; sign * i < sign * GreenLine.IndexOf(finish); i += sign)
-                        bezie.Points.Add(GreenLine[i].coord);
-                    bezie.Points.Add(finish.coord);
-                }
-            }
-
             else
             {
-                if (finish.Line == "Green")
-                {
-                    int sign = Math.Sign(GreenLine.IndexOf(finish) - GreenLine.IndexOf(start));
-                    for (int i = GreenLine.IndexOf(start); sign * i < sign * GreenLine.IndexOf(finish); i += sign)
-                        bezie.Points.Add(GreenLine[i].coord);
-                    bezie.Points.Add(finish.coord);
-                }
+                string passLine = start.Line + '_' + finish.Line;
+                string point = passStations.Find(s => s.Line == passLine).Name; //Name of passage station in starting Line
+                GoFrom = currentLine.IndexOf(start);
+                GoTo = currentLine.FindIndex(s => s.Name == point);
+                MoveByLine(currentLine, GoFrom, GoTo, bezie);
 
-                else if (finish.Line == "Red")
-                {
-                    GoTo = GreenLine.FindIndex(st => st.Name == "Золоті Ворота");
-                    int sign = Math.Sign(GoTo - GreenLine.IndexOf(start));
-                    for (int i = GreenLine.IndexOf(start); sign * i < sign * GoTo; i += sign)
-                        bezie.Points.Add(GreenLine[i].coord);
-                    bezie.Points.Add(GreenLine[GoTo].coord);
-
-                    GoTo = RedLine.FindIndex(st => st.Name == "Театральна");
-
-                    sign = Math.Sign(RedLine.IndexOf(finish) - GoTo);
-                    for (int i = GoTo; sign * i < sign * RedLine.IndexOf(finish); i += sign)
-                        bezie.Points.Add(RedLine[i].coord);
-                    bezie.Points.Add(finish.coord);
-                }
-
-                else
-                {
-                    GoTo = GreenLine.FindIndex(st => st.Name == "Палац спорту");
-                    int sign = Math.Sign(GoTo - GreenLine.IndexOf(start));
-                    for (int i = GreenLine.IndexOf(start); sign * i < sign * GoTo; i += sign)
-                        bezie.Points.Add(GreenLine[i].coord);
-                    bezie.Points.Add(GreenLine[GoTo].coord);
-
-                    GoTo = BlueLine.FindIndex(st => st.Name == "Площа Льва Толстого");
-
-                    sign = Math.Sign(BlueLine.IndexOf(finish) - GoTo);
-                    for (int i = GoTo; sign * i < sign * BlueLine.IndexOf(finish); i += sign)
-                        bezie.Points.Add(BlueLine[i].coord);
-                    bezie.Points.Add(finish.coord);
-                }
-
+                currentLine = map[finish.Line];
+                passLine = finish.Line + '_' + start.Line;
+                point = passStations.Find(s => s.Line == passLine).Name;
+                GoFrom = currentLine.FindIndex(s => s.Name == point);
+                GoTo = currentLine.IndexOf(finish);
+                MoveByLine(currentLine, GoFrom, GoTo, bezie);
             }
+
+
             pathFigure.Segments.Add(bezie);
             pathGeometry.Figures.Add(pathFigure);
-        } 
+        }
 
         private void DoAnimation()
         {
@@ -239,10 +132,6 @@ namespace MetroPass
             this.RegisterName("AnimatedTranslateTransform", transform);
 
             aRectangle.RenderTransform = transform;
-
-            Canvas mainPanel = new Canvas();
-            mainPanel.Width = 700;
-            mainPanel.Height = 680;
             mainPanel.Children.Add(aRectangle);
             this.Content = mainPanel;
 
@@ -274,6 +163,72 @@ namespace MetroPass
             {
                 storyboard.Begin(this);
             };
+        }
+        
+        private void Window_MouseLeftButtonUp_1(object sender, MouseButtonEventArgs e)
+        {
+            if ((bool)EditorsChB.IsChecked) return;
+
+            Point p = Mouse.GetPosition(mainPanel);
+            Station selected = FindStation(p);
+            if (selected != null)
+            {
+                StationFrom.Text = selected.Name;
+                start = selected;
+                if (finish != null)
+                {
+                    DrawPass();
+                    DoAnimation();
+                }
+            }
+        }
+
+        private void Window_MouseRightButtonUp_1(object sender, MouseButtonEventArgs e)
+        {
+            if ((bool)EditorsChB.IsChecked) return;
+
+            Point p = Mouse.GetPosition(mainPanel);
+            Station selected = FindStation(p);
+            if (selected != null)
+            {
+                StationWhere.Text = selected.Name;
+                finish = selected;
+                if (start != null)
+                {
+                    DrawPass();
+                    DoAnimation();
+                }
+            }
+        }
+
+        private void Window_Closing_1(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            StreamWriter writer= new StreamWriter(File.OpenWrite("Stations.txt"));
+            foreach (var list in map.Values)
+                foreach (var station in list)
+                    writer.WriteLine(station.ToString());
+            foreach (var station in passStations)
+                writer.WriteLine(station.ToString());
+            writer.Close();
+        }
+
+        private void Window_MouseDoubleClick_1(object sender, MouseButtonEventArgs e)
+        {
+
+            Point p = Mouse.GetPosition(mainPanel);
+            if ((bool)EditorsChB.IsChecked)
+            {
+                Station station = new Station(StationWhere.Text, StationFrom.Text, p);
+                if (station.Line.Contains('_'))
+                    passStations.Add(station);
+                else
+                {
+                    if (!map.ContainsKey(station.Line))
+                        map.Add(station.Line, new List<Station>());
+                    map[station.Line].Add(station);
+                }
+
+            }
         }
     }
 }
