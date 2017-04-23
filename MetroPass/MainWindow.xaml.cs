@@ -35,8 +35,8 @@ namespace MetroPass
             StreamReader reader = new StreamReader(File.OpenRead("Stations.txt"));
             while (!reader.EndOfStream)
             {
-                Station station=new Station(reader.ReadLine());
-                if(station.Line.Contains('_'))
+                Station station = new Station(reader.ReadLine());
+                if (station.Line.Contains('_'))
                     passStations.Add(station);
                 else
                 {
@@ -50,8 +50,8 @@ namespace MetroPass
 
         Station FindStation(Point p)
         {
-            int x =(int)p.X;
-            int y =(int)p.Y;
+            int x = (int)p.X;
+            int y = (int)p.Y;
             Station station = null;
             foreach (List<Station> list in map.Values)
             {
@@ -66,16 +66,23 @@ namespace MetroPass
             InitializeComponent();
             LoadBase();
         }
-        
+
+        private void AddPoint(PolyLineSegment bezie, Point po)
+        {
+            Point p = po;
+            p.X -= 20;
+            p.Y -= 20;
+            bezie.Points.Add(p);
+        }
         private void MoveByLine(List<Station> currentLine, int GoFrom, int GoTo, PolyLineSegment bezie)
         {
-            
+
             int sign = Math.Sign(GoTo - GoFrom);
             for (int i = GoFrom;
-                sign * i < sign * GoTo;
+                sign * i <= sign * GoTo;
                 i += sign)
             {
-                bezie.Points.Add(currentLine[i].coord);
+                AddPoint(bezie, currentLine[i].coord);
             }
         }
 
@@ -84,9 +91,14 @@ namespace MetroPass
 
             pathGeometry = new PathGeometry();
             pathFigure = new PathFigure();
-            pathFigure.StartPoint = start.coord;
+            Point startingFrom = start.coord;
+            startingFrom.X -= 20;
+            startingFrom.Y -= 20;
+            pathFigure.StartPoint = startingFrom;
             bezie = new PolyLineSegment();
             List<Station> currentLine = map[start.Line];
+
+
             int GoFrom, GoTo;
             if (start.Line == finish.Line)
             {
@@ -101,6 +113,8 @@ namespace MetroPass
                 GoFrom = currentLine.IndexOf(start);
                 GoTo = currentLine.FindIndex(s => s.Name == point);
                 MoveByLine(currentLine, GoFrom, GoTo, bezie);
+
+
 
                 currentLine = map[finish.Line];
                 passLine = finish.Line + '_' + start.Line;
@@ -135,36 +149,38 @@ namespace MetroPass
             mainPanel.Children.Add(aRectangle);
             this.Content = mainPanel;
 
-            PathGeometry animationPath = new PathGeometry();
-            PathFigure pFigure = new PathFigure();
-            pFigure.StartPoint = start.coord;
-            PolyLineSegment pLineSegment = bezie;
-            pFigure.Segments.Add(pLineSegment);
-            animationPath.Figures.Add(pFigure);
-
             DoubleAnimationUsingPath transX = new DoubleAnimationUsingPath();
-            transX.PathGeometry = animationPath;
+            transX.PathGeometry = pathGeometry;
             transX.Duration = TimeSpan.FromSeconds(5);
             transX.Source = PathAnimationSource.X;
             Storyboard.SetTargetName(transX, "AnimatedTranslateTransform");
-            Storyboard.SetTargetProperty(transX,  new PropertyPath(TranslateTransform.XProperty));
+            Storyboard.SetTargetProperty(transX, new PropertyPath(TranslateTransform.XProperty));
 
             DoubleAnimationUsingPath transY = new DoubleAnimationUsingPath();
-            transY.PathGeometry = animationPath;
+            transY.PathGeometry = pathGeometry;
             transY.Duration = TimeSpan.FromSeconds(5);
             transY.Source = PathAnimationSource.Y;
             Storyboard.SetTargetName(transY, "AnimatedTranslateTransform");
-            Storyboard.SetTargetProperty(transY,  new PropertyPath(TranslateTransform.YProperty));
+            Storyboard.SetTargetProperty(transY, new PropertyPath(TranslateTransform.YProperty));
 
             Storyboard storyboard = new Storyboard();
             storyboard.Children.Add(transX);
             storyboard.Children.Add(transY);
+            storyboard.Duration = TimeSpan.FromSeconds(7);
+
+
             aRectangle.Loaded += delegate(object sender, RoutedEventArgs e)
             {
                 storyboard.Begin(this);
             };
+
+            storyboard.Completed += delegate(object sender, EventArgs e)
+            {
+                mainPanel.Children.Remove(aRectangle);
+            };
         }
-        
+
+
         private void Window_MouseLeftButtonUp_1(object sender, MouseButtonEventArgs e)
         {
             if ((bool)EditorsChB.IsChecked) return;
@@ -203,12 +219,16 @@ namespace MetroPass
 
         private void Window_Closing_1(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            StreamWriter writer= new StreamWriter(File.OpenWrite("Stations.txt"));
+            StreamWriter writer = new StreamWriter(File.OpenWrite("Stations.txt"));
             foreach (var list in map.Values)
                 foreach (var station in list)
+                {
                     writer.WriteLine(station.ToString());
+                }
             foreach (var station in passStations)
+            {
                 writer.WriteLine(station.ToString());
+            }
             writer.Close();
         }
 
